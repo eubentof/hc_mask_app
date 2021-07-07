@@ -1,0 +1,63 @@
+body {
+    background-color: #332f35;
+}
+
+#popup {
+    background-color: #332f35;
+    color: white;
+    font-size: 20px;
+    padding: 30px;
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -40%);
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    transition: 0.2s all;
+    z-index: 2;
+    border-radius: 5px;
+}
+#popup.hide {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    /* top: 0; */
+    /* left: 0; */
+    z-index: -4;
+}
+
+#mask {
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    left: 50%;
+    top: 35%;
+    transform: translate(-50%, -35%);
+    width: 75%;
+    max-width: 550px;
+    cursor: crosshair;
+    touch-action: none;
+    background-color: white;
+}
+
+#filters {
+    display: flex;
+    position: fixed;
+    left: 50%;
+    bottom: 5%;
+    transform: translate(-50%, 0%);
+    gap: 20px;
+}
+
+.filter {
+    color: #332f35;
+    /* width: 100px; */
+    /* height: 100px; */
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
