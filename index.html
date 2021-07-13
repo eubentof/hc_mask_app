@@ -5,26 +5,39 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="http://nibunan.com/build/extend-canvas.min.js"></script>
   <script src="gerador.js" defer></script>
   <link rel="stylesheet" href="./style.css">
-  <title>Gerador</title>
+  <link rel="stylesheet" href="./fontawesome/css/all.min.css">
+  <title>Hilbert Mask Generator</title>
 </head>
 
 <body>
   <div id="popup">
-    <h3>Select the dimensions of the grid</h3>
-    <input type="text" id="canvas-width" value="256">
-    <button id="close">OK</button>
+    <h3>Type the mask size</h3>
+    <div>
+      <input type="text" id="canvas-width" value="256">
+      <button id="close">OK</button>
+    </div>
   </div>
   <main>
-    <canvas id="mask" width="256" height="256"></canvas>
+    <section id="section">
+      <canvas id="canvas"></canvas>
+      <div id="active-filter"></div>
+    </section>
+    <nav id="menu">
+      <button id="eraser" title="Eraser"><i class="fas fa-eraser"></i></button>
+      <button id="clear" title="Clear canvas"><i class="fas fa-trash-alt"></i></button>
+      <button id="export-txt" title="Export as matrix in a txt file"><i class="far fa-file-alt"></i></button>
+      <button id="export-png" title="Export as an image"><i class="far fa-image"></i></button>
+    </nav>
     <div id="filters">
     </div>
   </main>
   <template>
     <div class="filter">
-      <p>128x128</p>
     </div>
+    <p>128x128</p>
   </template>
 </body>
 

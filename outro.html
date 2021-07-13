@@ -1,0 +1,98 @@
+Skip to content
+Pull requests
+Issues
+Marketplace
+Explore
+@eubentof
+codeadamca /
+javascript-canvas
+
+1
+0
+
+0
+
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+
+Insights
+
+javascript-canvas/canvas-follow-mouse.html
+@codeadamca
+codeadamca Added a moving sample
+Latest commit 523946b on 21 Apr
+History
+1 contributor
+67 lines (47 sloc) 1.77 KB
+<!doctype html>
+<html>
+
+<head>
+
+  <title>JavaScript and the Canvas</title>
+
+  <style>
+    #canvas {
+      background-color: #000;
+      border: 3px solid red;
+      width: 600px;
+      height: 600px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <h1>The Canvas and the Mouse</h1>
+
+  <p>This circle will follw the mouse.</p>
+
+  <canvas id="canvas" width="600" height="600"></canvas>
+
+  <script>
+
+    // Setup the canvas
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    // Set up the line style
+    context.lineWidth = 5;
+    context.strokeStyle = "rgb(33,66,99)";
+
+    // Create a function to draw each frame. 
+    function frame(event) {
+
+      // Get the position of the mosue, this position is based on the 
+      // browser window, so we need to adjust for the position of the canvas.
+      var xMouse = event.clientX;
+      var yMouse = event.clientY;
+
+      // Adjust for the position of the canvas. 
+      xMouse -= (canvas.offsetLeft - canvas.scrollLeft + canvas.clientLeft);
+      yMouse -= (canvas.offsetTop - canvas.scrollTop + canvas.clientTop);
+
+      // Clear the previous frame
+      context.clearRect(0, 0, 600, 600);
+
+      // Draw the new circle
+      context.beginPath();
+      context.arc(xMouse, yMouse, 20, 0, 2 * Math.PI);
+      context.stroke();
+
+    }
+
+    // This tie the redrawing function is initiated when the mouse moves, not
+    // on available frames. 
+    canvas.addEventListener('mousemove', frame, false);
+
+  </script>
+
+</body>
+
+</html>

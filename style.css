@@ -29,35 +29,94 @@ body {
     z-index: -4;
 }
 
-#mask {
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
-    position: fixed;
-    left: 50%;
-    top: 35%;
-    transform: translate(-50%, -35%);
-    width: 75%;
-    max-width: 550px;
-    cursor: crosshair;
-    touch-action: none;
+#popup div {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+#canvas-width {
+    width: 80px;
+    text-align: center;
+    padding: 10px 32px;
+    font-size: 20px;
+}
+
+nav button,
+#close {
+    background-color: #4caf50; /* Green */
+    border: none;
+    color: white;
+    padding: 0px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#menu {
+    /* display: flex; */
+    gap: 8px;
+    display: none;
+}
+#menu button {
+    padding: 10px 15px;
+    margin-top: 15px;
+}
+
+#menu button.active {
+    background-color: coral;
+}
+
+main {
+    display: flex;
+    justify-content: bottom;
+    align-items: center;
+    flex-direction: column;
+    height: 100%;
+}
+
+section {
+    position: relative;
+    margin-top: 100px;
+    overflow: hidden;
+}
+
+#canvas {
+    position: absolute;
     background-color: white;
+    cursor: crosshair;
+    opacity: 0;
+}
+
+#active-filter {
+    position: absolute;
+    display: block;
+    width: 0;
+    height: 0;
+    cursor: crosshair;
+    filter: saturate(0.5);
 }
 
 #filters {
     display: flex;
+    align-items: end;
     position: fixed;
     left: 50%;
-    bottom: 5%;
+    bottom: 20px;
     transform: translate(-50%, 0%);
     gap: 20px;
 }
 
 .filter {
     color: #332f35;
-    /* width: 100px; */
-    /* height: 100px; */
-    background-color: white;
     display: flex;
-    justify-content: center;
+    justify-content: end;
     align-items: center;
     cursor: pointer;
+    flex-direction: column;
+    background-color: #332f35;
+    height: 100%;
+    padding: 5px;
 }
