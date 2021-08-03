@@ -11,9 +11,10 @@ const canvasWidthInput = document.getElementById('canvas-width');
 const menuButtons = document.getElementById('menu');
 
 let filterSize = null;
-let canvasSize = 0;
+let maskSize = 0;
 
 let mask = [];
+let maskFilters = {};
 const colorsPerFilterSize = {};
 
 const menuClickActions = {
@@ -21,6 +22,7 @@ const menuClickActions = {
   'clear': clearMask,
   'export-txt': exportMask,
   'export-png': exportImage,
+  'export-json': exportFilters,
 }
 
 function map(number, inMin, inMax, outMin, outMax) {
@@ -31,20 +33,20 @@ btnClose.addEventListener('click', () => {
 
   popup.classList.add('hide');
   canvas.style.display = 'block';
-  canvasSize = Number(canvasWidthInput.value);
-  mask = Array.from(new Array(canvasSize), () => new Array(canvasSize).fill(0));
-  section.style.width = `${canvasSize * 2}px`
-  section.style.height = `${canvasSize * 2}px`
+  maskSize = Number(canvasWidthInput.value);
+  mask = Array.from(new Array(maskSize), () => new Array(maskSize).fill(0));
+  section.style.width = `${maskSize * 2}px`
+  section.style.height = `${maskSize * 2}px`
 
-  canvas.style.width = `${canvasSize * 2}px`
-  canvas.width = canvasSize * 2;
-  canvas.style.height = `${canvasSize * 2}px`
-  canvas.height = canvasSize * 2;
+  canvas.style.width = `${maskSize * 2}px`
+  canvas.width = maskSize * 2;
+  canvas.style.height = `${maskSize * 2}px`
+  canvas.height = maskSize * 2;
   canvas.style.opacity = 1;
 
   ctx.beginPath(); //Start path
   ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvasSize * 2, canvasSize * 2);
+  ctx.fillRect(0, 0, maskSize * 2, maskSize * 2);
   ctx.closePath();
   ctx.stroke();
 
@@ -62,8 +64,8 @@ function getFilters() {
   var filter_template = document.getElementsByTagName("template")[0];
   var filter = filter_template.content.querySelector('div');
   let i = 2;
-  while (i < canvasSize) {
-    colorsPerFilterSize[i] = `hsl(${map(i === 2 ? 0 : i * 3, 0, canvasSize, 0, 365)}, 50%, 50%)`
+  while (i < maskSize) {
+    colorsPerFilterSize[i] = `hsl(${map(i === 2 ? 0 : i * 3, 0, maskSize, 0, 365)}, 50%, 50%)`
     const item = document.importNode(filter, true);
     item.innerHTML = `
       <div class="filter" style="width: ${i}px; height: ${i}px; background-color:${colorsPerFilterSize[i]};"></div>
@@ -85,7 +87,7 @@ function selectFilter(e) {
 }
 
 function findCell(x, y) {
-  let sliceSize = canvasSize / 2;
+  let sliceSize = maskSize / 2;
   let startX = 0;
   let startY = 0;
 
@@ -112,8 +114,8 @@ function findCell(x, y) {
 }
 
 function getCoords(e) {
-  const x = map(e.layerX, 0, canvas.clientWidth, 0, canvasSize);
-  const y = map(e.layerY, 0, canvas.clientHeight, 0, canvasSize);
+  const x = map(e.layerX, 0, canvas.clientWidth, 0, maskSize);
+  const y = map(e.layerY, 0, canvas.clientHeight, 0, maskSize);
   return findCell(x, y)
 }
 
@@ -139,19 +141,17 @@ selectedFilter.addEventListener('click', addFilter);
 selectedFilter.addEventListener('mousemove', () => checkFilter);
 
 function checkFilter(e) {
-  const shift = e.getModifierState("Shift");
-  const ctrl = e.getModifierState("Control");
-  const alt = e.getModifierState("Alt");
+  isValid = false;
 
-  const cellIsNotEmpty = mask[activeRegion.startX][activeRegion.startY] > 0;
-  const filterIsLower = mask[activeRegion.startX][activeRegion.startY] > filterSize;
+  const flippedY = maskSize - activeRegion.startY - filterSize;
+  const cellIsNotEmpty = mask[activeRegion.startX][flippedY] > 0;
+  const filterIsLower = mask[activeRegion.startX][flippedY] > filterSize;
   selectedFilter.style.cursor = 'crosshair';
 
-  // if ((cellIsNotEmpty || filterIsLower) && !ctrl) {
-  //   selectedFilter.style.cursor = 'not-allowed';
-  //   isValid = false;
-  //   return
-  // }
+  if (cellIsNotEmpty && filterIsLower) {
+    selectedFilter.style.cursor = 'not-allowed';
+    return
+  }
 
   isValid = true;
   if (isDown) addFilter(e);
@@ -159,6 +159,7 @@ function checkFilter(e) {
 
 function addFilter(e) {
   if (!isValid) return
+
   const shift = e.getModifierState("Shift");
   const ctrl = e.getModifierState("Control");
   const alt = e.getModifierState("Alt");
@@ -181,15 +182,18 @@ function clearFilter() {
 function fillAll() {
   ctx.beginPath(); //Start path
   ctx.fillStyle = colorsPerFilterSize[filterSize];
-  ctx.fillRect(0, 0, canvasSize * 2, canvasSize * 2);
+  ctx.fillRect(0, 0, maskSize * 2, maskSize * 2);
   ctx.closePath();
   ctx.stroke();
+
+  maskFilters[`${0}:${0}`] = maskSize;
 }
 
 function fillAvailableArea() {
-  for (let startX = 0; startX <= (canvasSize - filterSize); startX += filterSize) {
-    for (let startY = 0; startY <= (canvasSize - filterSize); startY += filterSize) {
-      if (mask[startX][startY] === 0) {
+  for (let startY = (maskSize - filterSize); startY >= 0; startY -= filterSize) {
+    let flippedY = maskSize - startY - filterSize;
+    for (let startX = 0; startX <= (maskSize - filterSize); startX += filterSize) {
+      if (mask[startX][flippedY] === 0) {
         drawFilter({ startX, startY })
       }
     }
@@ -205,11 +209,20 @@ function drawFilter(params) {
   if (startY === undefined) startY = activeRegion.startY;
   if (color === undefined) color = colorsPerFilterSize[filterSize];
 
-  ctx.beginPath(); //Start path
+  ctx.beginPath();
   ctx.fillStyle = color;
   ctx.fillRect(startX * 2, startY * 2, size * 2, size * 2);
   ctx.closePath();
   ctx.stroke();
+
+  /**
+   * The canvas element origin is in the top left corner, 
+   * this translates it to the bottom left corner,
+   * doing a vertical flip.
+   */
+  startY = maskSize - startY - size;
+
+  setMaskFilter({ startX, startY, size, erase });
 
   for (let i = startX; i < startX + size; i++) {
     for (let j = startY; j < startY + size; j++) {
@@ -218,20 +231,52 @@ function drawFilter(params) {
   }
 }
 
+function setMaskFilter(params) {
+  let { startX, startY, size, erase } = params || {};
+
+  // console.log(startX, startY);
+
+  /**
+   * In case the new filter has a bigger degree, the follow piece of code
+   * will check if there are other filters of smaller degrees in the area 
+   * that the new filter is filling, if so, it will delete it all.
+   */
+  Object.keys(maskFilters).forEach(key => {
+    const [coordX, coordY] = key.split(':');
+    const isContainedInXAxis = startX <= coordX && coordX <= startX + (size - 1);
+    const isContainedInYAxis = startY <= coordY && coordY <= startY + (size - 1);
+    const isContainedInNewMask = isContainedInXAxis && isContainedInYAxis;
+    // const isSmallerFilter = maskFilters[`${coordX}:${coordY}`] < size;
+    // if (isContainedInNewMask && isSmallerFilter) delete maskFilters[`${coordX}:${coordY}`];
+    if (isContainedInNewMask) delete maskFilters[`${coordX}:${coordY}`];
+  })
+
+  if (erase) delete maskFilters[`${startX}:${startY}`]
+  else maskFilters[`${startX}:${startY}`] = filterSize;
+}
+
 
 function clearMask() {
   ctx.beginPath(); //Start path
   ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvasSize * 2, canvasSize * 2);
+  ctx.fillRect(0, 0, maskSize * 2, maskSize * 2);
   ctx.closePath();
   ctx.stroke();
-  mask = Array.from(new Array(canvasSize), () => new Array(canvasSize).fill(0));
+  mask = Array.from(new Array(maskSize), () => new Array(maskSize).fill(0));
+  maskFilters = {};
 }
 
 function exportMask() {
   let file = new Blob([JSON.stringify(mask)], { type: 'txt' });
   let blobUrl = URL.createObjectURL(file);
   download(blobUrl, 'mask.txt');
+}
+
+function exportFilters() {
+  let file = new Blob([JSON.stringify(maskFilters)], { type: 'json' });
+  let blobUrl = URL.createObjectURL(file);
+  download(blobUrl, 'mask.json');
+  // console.log(Object.keys(maskFilters).length);
 }
 
 function exportImage() {
@@ -266,7 +311,6 @@ let isErasing = false;
 function allowErasing(e) {
   let target = e.target;
   if (target.id !== "eraser") target = target.parentElement
-  console.log(target);
   if (isErasing) {
     isErasing = false;
     target.classList.remove('active');
@@ -274,5 +318,4 @@ function allowErasing(e) {
     isErasing = true;
     target.classList.add('active');
   }
-  console.log(isErasing);
 }
